@@ -1,0 +1,33 @@
+version: '3'
+services:
+  db:
+    image: mysql:5.7.33
+    env_file:
+      - .env
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DATABASE_PASSWORD}
+    volumes:
+      - mysql_cache:/var/lib/mysql
+    networks:
+      - internal
+  web:
+    image: hatd/github-action:1.0
+    env_file:
+      - .env
+    volumes:
+      - .:/myapp
+      - bundle_cache:/usr/local/bundle
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    networks:
+      - internal
+    tty: true
+    stdin_open: true
+volumes:
+  mysql_cache:
+  bundle_cache:
+networks:
+  internal:
+    driver: bridge
