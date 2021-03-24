@@ -1,0 +1,64 @@
+name: Rails
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test_rspec:
+    name: Test Rspec
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:5.7.33
+        env:
+          DATABASE_USERNAME: root
+          DATABASE_PASSWORD: password
+          MYSQL_ROOT_PASSWORD: password
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      BUNDLE_PATH: vendor/bundle
+      DATABASE_HOSTNAME: 127.0.0.1
+      DATABASE_USERNAME: root
+      DATABASE_PASSWORD: password
+      BUNDLER_VERSION: 2.1.4
+      RAILS_ENV: test
+    steps:
+      - uses: actions/checkout@v1
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '2.6.5'
+      - name: Set up Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12.21.0
+      - uses: actions/cache@v2
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-
+      - name: Bundle Install
+        run: |
+          bundle check || bundle install --jobs 4 --retry 3
+          yarn install
+      - name: Rspec tests
+        env:
+          RAILS_ENV: test
+          DATABASE_HOSTNAME: 127.0.0.1
+          DATABASE_USERNAME: root
+          DATABASE_PASSWORD: password
+        run: |
+          bundle exec rails db:create
+          bundle exec rails db:migrate
+          bundle exec rspec
+      - name: Rubocop test
+        run: |
+          bundle exec rubocop
