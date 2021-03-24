@@ -23,28 +23,16 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    env:
-      BUNDLE_PATH: vendor/bundle
-      DATABASE_HOSTNAME: 127.0.0.1
-      DATABASE_USERNAME: root
-      DATABASE_PASSWORD: password
-      BUNDLER_VERSION: 2.1.4
-      RAILS_ENV: test
     steps:
       - uses: actions/checkout@v1
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: '2.6.5'
+          bundler-cache: true
       - name: Set up Node
         uses: actions/setup-node@v1
         with:
           node-version: 12.21.0
-      - uses: actions/cache@v2
-        with:
-          path: vendor/bundle
-          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-gems-
       - name: Bundle Install
         run: |
           bundle check || bundle install --jobs 4 --retry 3
